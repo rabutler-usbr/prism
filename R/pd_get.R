@@ -4,6 +4,7 @@
 #' [prism_archive_ls()] or [prism_archive_subset()]. These functions get the 
 #' name or date from these data, or convert these data to a file name.
 #' 
+#' @description
 #' `pd_get_name()` extracts a long, human readable name from the prism
 #' data.
 #' 
@@ -11,6 +12,23 @@
 #' 
 #' @return `pd_get_name()` and `pd_get_date()` return a character vector of 
 #' names/dates.
+#' 
+#' @examples \dontrun{
+#' # Assumes 2000-2002 annual precipitation data is already downloaded
+#' pd <- prism_archive_subset('ppt', 'annual', years = 2000:2002)
+#' pd_get_name(pd)
+#' ## [1] "2000 - 4km resolution - Precipitation" "2001 - 4km resolution - Precipitation"
+#' ## [3] "2002 - 4km resolution - Precipitation"
+#' 
+#' pd_get_date(pd)
+#' ## [1] "2000-01-01" "2001-01-01" "2002-01-01"
+#' 
+#' pd_get_type(pd)
+#' ## [1] "ppt" "ppt" "ppt"
+#' 
+#' pd_to_file(pd[1])
+#' ## [1] "C:/prismdir/PRISM_ppt_stable_4kmM3_2000_bil/PRISM_ppt_stable_4kmM3_2000_bil.bil""
+#' }
 #' 
 #' @export
 #' @rdname pd_get
@@ -32,6 +50,9 @@ pd_get_date <- function(pd) {
 }
 
 #' @description `pd_get_type()` parses the variable from the prism data.
+#' 
+#' @return `pd_get_type()` returns a character vector of prism variable types,
+#' e.g., 'ppt'.
 #' 
 #' @export
 #' @rdname pd_get
@@ -71,7 +92,7 @@ prism_md <- function(f, returnDate = FALSE) {
 #' 
 #' @param p a prism file directory or bil file
 #' 
-#' @param returnDate TRUE or FALSE. If TRUE, an ISO date is returned. By default 
+#' @param returnDate TRUE or FALSE. If TRUE, an ISO date is returned. By default
 #'   years will come back with YYYY-01-01 and months as YYYY-MM-01
 #'   
 #' @return a properly parsed string of human readable names
@@ -84,27 +105,28 @@ pr_parse <- function(p,returnDate = FALSE){
   normals <- FALSE
   
   if(grepl("normal",paste(p,collapse=""))){
-    if(grepl("annual",paste(p,collapse=""))){mon <- "Annual"
-      } else {
-        mon <- month.abb[as.numeric(p[length(p)-1])]
-      }
+    if(grepl("annual",paste(p,collapse=""))) {
+      mon <- "Annual"
+    } else {
+      mon <- month.abb[as.numeric(p[length(p)-1])]
+    }
     ds <- paste(mon,"30-year normals",sep=" ")
     normals <- TRUE
-    } else {
+  } else {
    
-  
     d <- p[length(p)-1]
     yr <- substr(d,1,4)
     mon <- substr(d,5,6)
     day <- substr(d,7,8)
+    
     ## Get resolution
     ### Create date string
-    ifelse(
+    ds <- ifelse(
       !is.na(month.abb[as.numeric(mon)]),
-      ds <- paste(month.abb[as.numeric(mon)],day,yr,sep=" "),
-      ds <- paste(yr,sep=" ")
+      paste(month.abb[as.numeric(mon)],day,yr,sep=" "),
+      paste(yr,sep=" ")
     )
-    }
+  }
   
   ures <- ifelse(
     grepl("4km",paste(p,collapse="")),
@@ -121,7 +143,12 @@ pr_parse <- function(p,returnDate = FALSE){
     if (normals) {
       out <- ""
     } else {
-      out <- paste(yr,ifelse(nchar(mon) > 0,mon,"01"),ifelse(nchar(day) > 0,day,"01"),sep="-")
+      out <- paste(
+        yr, 
+        ifelse(nchar(mon) > 0, mon, "01"), 
+        ifelse(nchar(day) > 0, day, "01"), 
+        sep = "-"
+      )
     }
   }
   
@@ -134,6 +161,9 @@ pr_parse <- function(p,returnDate = FALSE){
 #' file does not exist in the local prism archive. 
 #' 
 #' @param pd prism data character vector. 
+#' 
+#' @return `pd_to_file()` returns a character vector with the full path to the 
+#' bil file.
 #' 
 #' @export
 #' @rdname pd_get
